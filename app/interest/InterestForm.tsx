@@ -2,8 +2,8 @@
 
 import { useState, FormEvent } from "react";
 
-// Get your free access key at web3forms.com — enter the email address you want
-// submissions delivered to, copy the key they send you, and paste it here.
+// To activate: go to web3forms.com, enter happyhoundstrainingacademy@gmail.com,
+// check that inbox for the access key, and paste it below.
 const WEB3FORMS_ACCESS_KEY = "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
 
 type Status = "idle" | "loading" | "success" | "error";
