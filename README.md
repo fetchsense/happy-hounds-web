@@ -11,7 +11,7 @@ Centre, an indoor dog activity centre in Wrexham, LL12.
 | Styling | Tailwind CSS |
 | Lint | ESLint (`eslint-config-next`) |
 | CI | GitHub Actions — lint + build on every push/PR (`.github/workflows/ci.yml`) |
-| Hosting | Vercel (Hobby/free tier to start) |
+| Hosting | GitHub Pages for now (free, zero extra credentials); Vercel (Hobby/free tier) once server-side features are needed |
 | Future: database | Postgres (Vercel Postgres or Supabase) once the booking system needs persistence |
 | Future: payments | Stripe, sandbox/test keys until the CEO confirms going live |
 
@@ -42,6 +42,8 @@ Centre, an indoor dog activity centre in Wrexham, LL12.
 
 ## Project status
 
+Live at [fetchsense.github.io/happy-hounds-web](https://fetchsense.github.io/happy-hounds-web/).
+
 This is the initial skeleton: a placeholder homepage with the business name,
 a one-line description, and stubs for services/location/hours. No booking
 system or payments yet — those are tracked as separate pieces of work.
@@ -62,18 +64,27 @@ npm run build  # production build (also run in CI)
 
 ## Deploying
 
-The repo is wired for Vercel's standard GitHub integration:
+**Live now:** [fetchsense.github.io/happy-hounds-web](https://fetchsense.github.io/happy-hounds-web/)
+— deployed via GitHub Pages on every push to `main`
+(`.github/workflows/deploy-pages.yml`), using only the repo's built-in
+`GITHUB_TOKEN` (no extra secrets). This proves the pipeline end to end for
+the current static skeleton.
 
-1. Push this repo to a GitHub repository under the business's account/org.
-2. In Vercel, "Add New Project" → import the GitHub repo → defaults are
-   correct for Next.js (no build settings to change).
+GitHub Pages only serves static files, so the Pages build runs with
+`output: 'export'` and a `/happy-hounds-web` base path
+(`GITHUB_PAGES_BUILD=true`, see `next.config.ts`). The default build
+(used by CI and any future Vercel deploy) stays a normal server build.
+
+**Planned (once the booking system needs a server):** move to Vercel, per
+the original ADR — Vercel is still the better target for API
+routes/server actions, and gets PR preview URLs for free. That move needs
+a Vercel account/API token, which is a billing decision, not the agent's
+to make unilaterally:
+
+1. In Vercel, "Add New Project" → import the GitHub repo (`fetchsense/happy-hounds-web`)
+   → defaults are correct for Next.js (no build settings to change).
+2. Drop the `GITHUB_PAGES_BUILD` override — Vercel doesn't need it.
 3. Every push to `main` deploys to production; every PR gets a preview URL.
-
-**Status:** the codebase is deploy-ready (builds and lints clean), but no
-GitHub repository or Vercel account has been created yet for this project —
-that requires account/billing ownership decisions, so it's tracked as a
-follow-up rather than done silently by the agent. See the linked issue for
-who owns creating those accounts.
 
 ## Roadmap (not in this skeleton)
 
