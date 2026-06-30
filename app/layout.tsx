@@ -23,7 +23,7 @@ const navLinks = [
   { href: "/location", label: "Location & Hours" },
 ];
 
-const interestLink = { href: "/interest", label: "Register Interest" };
+const ctaLink = { href: "/booking", label: "Book now" };
 
 export default function RootLayout({
   children,
@@ -65,10 +65,10 @@ export default function RootLayout({
             </nav>
 
             <Link
-              href={interestLink.href}
+              href={ctaLink.href}
               className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
             >
-              {interestLink.label}
+              {ctaLink.label}
             </Link>
           </div>
         </header>
@@ -97,8 +97,8 @@ export default function RootLayout({
                     </li>
                   ))}
                   <li>
-                    <Link href={interestLink.href} className="hover:text-amber-700">
-                      {interestLink.label}
+                    <Link href={ctaLink.href} className="hover:text-amber-700">
+                      {ctaLink.label}
                     </Link>
                   </li>
                 </ul>
