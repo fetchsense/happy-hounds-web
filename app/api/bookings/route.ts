@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
-import { createBooking } from "@/lib/bookings";
+import { createBooking, getBookingByCode } from "@/lib/bookings";
+import { sendBookingEmails } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,14 @@ export async function POST(request: NextRequest) {
   if (!result.ok) {
     const status = result.error === "SESSION_NOT_FOUND" ? 404 : 409;
     return Response.json({ error: result.error }, { status });
+  }
+
+  // Fire-and-forget: email failure must not block or fail the booking response
+  const full = getBookingByCode(result.booking.confirmation_code);
+  if (full) {
+    sendBookingEmails(full).catch((err) =>
+      console.error("[email] Failed to send booking emails:", err)
+    );
   }
 
   return Response.json({ booking: result.booking }, { status: 201 });

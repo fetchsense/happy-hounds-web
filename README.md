@@ -97,6 +97,11 @@ The `.github/workflows/deploy-pages.yml` workflow is now disabled.
    - `ADMIN_SECRET` — a strong, random password for `/admin/*` access
      (e.g. `openssl rand -hex 20`). Without this, admin routes are
      blocked in production.
+   - `EMAIL_APP_PASSWORD` — Gmail App Password for `happyhoundstrainingacademy@gmail.com`,
+     used to send booking confirmation emails to customers and staff notifications.
+     Generate one at Google Account → Security → 2-Step Verification → App Passwords.
+     Without this, email is skipped but bookings still work (on-screen confirmation
+     remains available).
 4. **Deploy:** Vercel auto-deploys every push to `main`.
 
 ### Database in production
@@ -121,6 +126,5 @@ swap — the `getDb()` function is the only place to change.
 
 - **HAPA-5:** Payments via Stripe (sandbox/test until CEO confirms go-live)
 - **DB migration:** Swap SQLite for Neon/Turso when deploying serverless
-- **Email confirmations:** Send booking confirmation to customer email
 - **Session management:** Admin UI to add/remove sessions, set capacity
 - **Cancellations:** Customer-facing cancellation via confirmation code
