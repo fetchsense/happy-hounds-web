@@ -4,7 +4,7 @@ import InterestForm from "./InterestForm";
 export const metadata: Metadata = {
   title: "Register Your Interest",
   description:
-    "We're planning an indoor dog play and training space near Llay, Wrexham. Tell us what you'd use, how often, and what you'd pay — takes 2 minutes.",
+    "We're planning an indoor dog play and training space near Llay, Wrexham. Tell us what you'd use, how often, and what you'd pay — takes 1 minute.",
   openGraph: {
     title: "Would you use an indoor dog activity space in Wrexham?",
     description:
@@ -65,7 +65,7 @@ export default function InterestPage() {
             Tell us what you think
           </h2>
           <p className="mt-2 text-stone-600 text-sm">
-            Takes about 2 minutes. If we open, people who register first get priority access.
+            Takes about 1 minute. If we open, people who register first get priority access.
           </p>
           <div className="mt-6">
             <InterestForm />
