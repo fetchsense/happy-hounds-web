@@ -2,9 +2,8 @@
 
 import { useState, FormEvent } from "react";
 
-// To activate: go to web3forms.com, enter happyhoundstrainingacademy@gmail.com,
-// check that inbox for the access key, and paste it below.
-const WEB3FORMS_ACCESS_KEY = "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
+// Web3Forms routes submissions to happyhoundstrainingacademy@gmail.com.
+const WEB3FORMS_ACCESS_KEY = "77ee5897-7f66-40b3-8956-e90f1387ac41";
 
 type Status = "idle" | "loading" | "success" | "error";
 
