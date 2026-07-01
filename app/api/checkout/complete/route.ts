@@ -4,6 +4,7 @@ import { getStripe } from "@/lib/stripe";
 import { confirmBookingPayment, getBookingById } from "@/lib/bookings";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);

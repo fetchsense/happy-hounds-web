@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { getSessions, seedSessionsIfEmpty } from "@/lib/sessions";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr);

@@ -3,6 +3,12 @@ import { createBooking, getBookingByCode } from "@/lib/bookings";
 import { sendBookingEmails } from "@/lib/email";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Stub for static export (GitHub Pages) — real bookings require server-side POST
+export async function GET() {
+  return Response.json({ error: "not available" }, { status: 405 });
+}
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;

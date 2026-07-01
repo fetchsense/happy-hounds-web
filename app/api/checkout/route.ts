@@ -9,6 +9,12 @@ import {
 } from "@/lib/session-types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Stub for static export (GitHub Pages) — Stripe checkout requires server-side POST
+export async function GET() {
+  return Response.json({ error: "not available" }, { status: 405 });
+}
 
 function formatTime(t: string): string {
   const [h, m] = t.split(":").map(Number);
