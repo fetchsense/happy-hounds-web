@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useReducer, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useId, useReducer, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ServiceType } from "@/lib/session-types";
 import {
   SERVICE_DESCRIPTIONS,
@@ -206,7 +206,7 @@ function StepService({ dispatch }: { dispatch: React.Dispatch<Action> }) {
               <p className="font-bold text-amber-700">
                 {formatPrice(SERVICE_PRICES_PENCE[type])}
               </p>
-              <p className="text-xs text-stone-400">confirm, pay later</p>
+              <p className="text-xs text-stone-400">pay online</p>
             </div>
           </button>
         ))}
@@ -455,7 +455,7 @@ function StepDetails({
   );
 }
 
-// ── Step 4: Review & confirm ───────────────────────────────────────────────────
+// ── Step 4: Review & pay ───────────────────────────────────────────────────────
 
 function StepReview({
   state,
@@ -464,19 +464,19 @@ function StepReview({
   state: FormState;
   dispatch: React.Dispatch<Action>;
 }) {
-  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const idempotencyKey = useRef(crypto.randomUUID());
 
   const session = state.selectedSession!;
-  const price = formatPrice(SERVICE_PRICES_PENCE[state.serviceType!]);
+  const pricePence = SERVICE_PRICES_PENCE[state.serviceType!];
+  const price = formatPrice(pricePence);
 
-  async function confirm() {
+  async function pay() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/bookings", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -497,11 +497,12 @@ function StepReview({
       }
 
       if (!res.ok) {
-        throw new Error("Booking failed");
+        throw new Error("Checkout failed");
       }
 
-      const { booking } = await res.json();
-      router.push(`/booking/confirmation/${booking.confirmation_code}`);
+      const { url } = await res.json();
+      // Full-page redirect to Stripe Checkout
+      window.location.href = url;
     } catch {
       setError("Something went wrong. Please try again, or email us to book directly.");
       setSubmitting(false);
@@ -510,9 +511,9 @@ function StepReview({
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-stone-900">Review your booking</h2>
+      <h2 className="text-xl font-bold text-stone-900">Review &amp; pay</h2>
       <p className="mt-1 text-sm text-stone-500">
-        Check everything looks right before confirming.
+        Check everything looks right, then pay securely via Stripe.
       </p>
 
       <div className="mt-5 overflow-hidden rounded-xl border border-stone-200 bg-white">
@@ -523,7 +524,7 @@ function StepReview({
           <p className="text-sm text-stone-600">
             {formatTime(session.start_time)} – {formatTime(session.end_time)}
           </p>
-          <p className="mt-1 text-sm font-semibold text-amber-700">{price} — confirm now, pay on the day</p>
+          <p className="mt-1 text-sm font-semibold text-amber-700">{price}</p>
         </div>
 
         <div className="px-5 py-4 border-b border-stone-100">
@@ -539,9 +540,8 @@ function StepReview({
         </div>
       </div>
 
-      <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <strong>Payment:</strong> You&apos;ll pay on the day. We&apos;ll send your confirmation code to{" "}
-        <strong>{state.customerEmail}</strong> so you can reference your booking.
+      <div className="mt-4 rounded-lg border border-stone-100 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+        You&apos;ll be taken to Stripe to pay {price} securely. Your slot is reserved for 30 minutes.
       </div>
 
       {error && (
@@ -561,11 +561,11 @@ function StepReview({
         </button>
         <button
           type="button"
-          onClick={confirm}
+          onClick={pay}
           disabled={submitting}
           className="flex-1 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {submitting ? "Confirming…" : "Confirm booking"}
+          {submitting ? "Redirecting to payment…" : `Pay ${price} →`}
         </button>
       </div>
     </div>
@@ -573,6 +573,25 @@ function StepReview({
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+function PaymentBanner() {
+  const params = useSearchParams();
+  const payment = params.get("payment");
+  if (!payment) return null;
+  if (payment === "cancelled") {
+    return (
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Payment was cancelled — your details are still here if you&apos;d like to try again.
+      </div>
+    );
+  }
+  return (
+    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      Something went wrong with the payment. Please try again or{" "}
+      <a href="mailto:hello@happyhoundscentre.co.uk" className="underline">email us</a>.
+    </div>
+  );
+}
 
 export default function BookingPage() {
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -584,8 +603,11 @@ export default function BookingPage() {
           Book a session
         </h1>
         <p className="mt-2 text-stone-500 text-sm">
-          Confirm your place now and pay on the day. You&apos;ll receive a confirmation code by email.
+          Reserve and pay online. You&apos;ll receive a confirmation by email.
         </p>
+        <Suspense>
+          <PaymentBanner />
+        </Suspense>
 
         <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-stone-100 sm:p-8">
           <StepIndicator current={state.step} />

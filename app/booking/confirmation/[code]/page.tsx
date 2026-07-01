@@ -104,7 +104,12 @@ export default async function ConfirmationPage({ params }: Props) {
             <div className="flex justify-between gap-4 px-5 py-3">
               <dt className="text-sm font-medium text-stone-500">Price</dt>
               <dd className="text-sm font-semibold text-stone-900">
-                {price} — <span className="text-amber-700">pay on the day</span>
+                {price}{" "}
+                {booking.stripe_session_id ? (
+                  <span className="text-green-700">— paid online</span>
+                ) : (
+                  <span className="text-amber-700">— pay on the day</span>
+                )}
               </dd>
             </div>
           </dl>
@@ -115,6 +120,7 @@ export default async function ConfirmationPage({ params }: Props) {
           <p className="font-semibold text-stone-900">What to bring on the day</p>
           <ul className="mt-3 space-y-1.5 text-sm text-stone-600" role="list">
             <li>Your confirmation code: <strong>{booking.confirmation_code}</strong></li>
+            {!booking.stripe_session_id && <li>Payment of {price} (card or cash)</li>}
             <li>Any food/treats your dog needs during the day</li>
             <li>Up-to-date vaccination records if it&apos;s your dog&apos;s first visit</li>
           </ul>

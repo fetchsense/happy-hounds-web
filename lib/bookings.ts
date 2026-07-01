@@ -12,6 +12,7 @@ export interface Booking {
   dog_breed: string;
   notes: string | null;
   status: string;
+  stripe_session_id: string | null;
   created_at: string;
 }
 
@@ -156,4 +157,91 @@ export function getAllUpcomingBookings(): BookingWithSession[] {
        ORDER BY s.date, s.start_time, b.customer_name`
     )
     .all(today) as BookingWithSession[];
+}
+
+// ── Stripe payment flow ────────────────────────────────────────────────────────
+
+export type PendingBookingResult =
+  | { ok: true; booking: Booking }
+  | { ok: false; error: "SESSION_NOT_FOUND" | "FULLY_BOOKED" };
+
+/**
+ * Creates a booking in 'pending_payment' status before redirecting to Stripe.
+ * Counts both confirmed and pending_payment bookings toward capacity so users
+ * can't start checkout for an already-contested last slot.
+ */
+export function createPendingBooking(input: CreateBookingInput): PendingBookingResult {
+  const db = getDb();
+
+  // Idempotency: if a booking with this key already exists, return it
+  if (input.idempotency_key) {
+    const existing = db
+      .prepare("SELECT * FROM bookings WHERE idempotency_key = ?")
+      .get(input.idempotency_key) as Booking | undefined;
+    if (existing) return { ok: true, booking: existing };
+  }
+
+  const session = getSessionById(input.session_id);
+  if (!session) return { ok: false, error: "SESSION_NOT_FOUND" };
+
+  let result: PendingBookingResult = { ok: false, error: "FULLY_BOOKED" };
+
+  db.transaction(() => {
+    const { n } = db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM bookings WHERE session_id = ? AND status IN ('confirmed', 'pending_payment')"
+      )
+      .get(input.session_id) as { n: number };
+
+    if (n >= session.capacity) return;
+
+    let code: string;
+    let attempts = 0;
+    do {
+      code = generateCode();
+      if (++attempts > 20) throw new Error("Could not generate unique code");
+    } while (
+      db.prepare("SELECT id FROM bookings WHERE confirmation_code = ?").get(code)
+    );
+
+    db.prepare(
+      `INSERT INTO bookings
+        (session_id, confirmation_code, idempotency_key,
+         customer_name, customer_email, dog_name, dog_breed, notes, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment')`
+    ).run(
+      input.session_id,
+      code!,
+      input.idempotency_key ?? null,
+      input.customer_name,
+      input.customer_email,
+      input.dog_name,
+      input.dog_breed,
+      input.notes ?? null
+    );
+
+    const booking = db
+      .prepare("SELECT * FROM bookings WHERE confirmation_code = ?")
+      .get(code!) as Booking;
+    result = { ok: true, booking };
+  })();
+
+  return result;
+}
+
+/**
+ * Marks a pending booking as confirmed after Stripe payment succeeds.
+ * Idempotent: safe to call twice for the same booking.
+ */
+export function confirmBookingPayment(bookingId: number, stripeSessionId: string): Booking | null {
+  const db = getDb();
+  db.prepare(
+    "UPDATE bookings SET status = 'confirmed', stripe_session_id = ? WHERE id = ? AND status = 'pending_payment'"
+  ).run(stripeSessionId, bookingId);
+  return (db.prepare("SELECT * FROM bookings WHERE id = ?").get(bookingId) as Booking | undefined) ?? null;
+}
+
+export function getBookingById(id: number): Booking | null {
+  const db = getDb();
+  return (db.prepare("SELECT * FROM bookings WHERE id = ?").get(id) as Booking | undefined) ?? null;
 }

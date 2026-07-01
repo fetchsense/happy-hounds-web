@@ -46,4 +46,7 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_bookings_session ON bookings(session_id);
     CREATE INDEX IF NOT EXISTS idx_bookings_code    ON bookings(confirmation_code);
   `);
+
+  // Idempotent column migrations for existing databases
+  try { db.exec("ALTER TABLE bookings ADD COLUMN stripe_session_id TEXT"); } catch { /* already exists */ }
 }
