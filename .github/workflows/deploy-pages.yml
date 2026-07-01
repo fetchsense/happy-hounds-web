@@ -11,7 +11,8 @@
 # This workflow is intentionally disabled (no trigger events) so it does not
 # run and does not block the repo's GitHub Pages environment.
 
-on: {}  # disabled
+on:
+  workflow_dispatch:  # manual trigger only — auto-deploy is disabled (see comment above)
 
 name: Deploy to GitHub Pages (deprecated)
 
